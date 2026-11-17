@@ -16,6 +16,7 @@ const emailSchema = z.string().trim().email().max(254);
 const credentialsSchema = z.object({ email: emailSchema, password: z.string().min(12).max(128) });
 const resetSchema = z.object({ token: z.string().min(20).max(256), password: z.string().min(12).max(128) });
 type SessionUser = { id: string; email: string; email_verified: boolean };
+type AppRequest = FastifyRequest<any>;
 declare module "fastify" { interface FastifyRequest { authUser: SessionUser | null; } }
 
 function cookieOptions(httpOnly: boolean) {
@@ -23,8 +24,8 @@ function cookieOptions(httpOnly: boolean) {
     ...(config.COOKIE_DOMAIN ? { domain: config.COOKIE_DOMAIN } : {}),
     ...(httpOnly ? { maxAge: config.SESSION_TTL_SECONDS } : { maxAge: 3600 }) };
 }
-function clientIp(request: FastifyRequest): string | null { return request.ip || null; }
-async function audit(request: FastifyRequest, event: string, userId: string | null = null) {
+function clientIp(request: AppRequest): string | null { return request.ip || null; }
+async function audit(request: AppRequest, event: string, userId: string | null = null) {
   await pool.query("INSERT INTO audit_logs(user_id,event_type,ip_address,user_agent) VALUES($1,$2,$3,$4)",
     [userId, event, clientIp(request), request.headers["user-agent"] ?? null]);
 }
@@ -45,7 +46,13 @@ async function createSession(request: FastifyRequest, reply: FastifyReply, userI
   reply.setCookie(SESSION_COOKIE, rawToken, cookieOptions(true));
 }
 
-const app = Fastify({ logger: true, trustProxy: config.TRUST_PROXY_HOPS > 0 ? config.TRUST_PROXY_HOPS : false, bodyLimit: 16 * 1024 });
+const app = Fastify({
+  logger: true,
+  trustProxy: config.TRUST_PROXY_HOPS > 0
+    ? (_address, hop) => hop < config.TRUST_PROXY_HOPS
+    : false,
+  bodyLimit: 16 * 1024
+});
 await app.register(cookie);
 await app.register(cors, { credentials: true, methods: ["GET","POST","OPTIONS"],
   allowedHeaders: ["Content-Type","X-CSRF-Token"],
