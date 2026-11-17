@@ -2,6 +2,7 @@
   "name": "@ocodejs/auth-gateway",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Central identity and authentication gateway for the Velclaw ecosystem",
   "engines": {
     "node": ">=22"
