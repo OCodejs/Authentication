@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Central identity and authentication gateway for the Velclaw ecosystem",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "build": "tsc -p tsconfig.json",
@@ -17,6 +19,7 @@
     "@fastify/cors": "^10.0.2",
     "@fastify/rate-limit": "^10.2.1",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.1.0",
     "argon2": "^0.41.1",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
